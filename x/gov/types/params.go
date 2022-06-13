@@ -1,7 +1,10 @@
 package types
 
 import (
+	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	yaml "gopkg.in/yaml.v2"
@@ -136,20 +139,22 @@ func validateTallyParams(i interface{}) error {
 }
 
 // NewVotingParams creates a new VotingParams object
-func NewVotingParams(votingPeriod time.Duration) VotingParams {
+func NewVotingParams(votingPeriod time.Duration, pvps []ProposalVotingPeriod) VotingParams {
 	return VotingParams{
-		VotingPeriod: votingPeriod,
+		VotingPeriod:          votingPeriod,
+		ProposalVotingPeriods: pvps,
 	}
 }
 
 // DefaultVotingParams default parameters for voting
 func DefaultVotingParams() VotingParams {
-	return NewVotingParams(DefaultPeriod)
+	return NewVotingParams(DefaultPeriod, []ProposalVotingPeriod{})
 }
 
 // Equal checks equality of TallyParams
 func (vp VotingParams) Equal(other VotingParams) bool {
-	return vp.VotingPeriod == other.VotingPeriod
+	return vp.VotingPeriod == other.VotingPeriod &&
+		ProposalVotingPeriods(vp.ProposalVotingPeriods).Equal(ProposalVotingPeriods(other.ProposalVotingPeriods))
 }
 
 // String implements stringer interface
@@ -166,6 +171,15 @@ func validateVotingParams(i interface{}) error {
 
 	if v.VotingPeriod <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
+	}
+
+	for _, pvp := range v.ProposalVotingPeriods {
+		if pvp.ProposalType == "" {
+			return errors.New("empty proposal type for proposal voting period")
+		}
+		if pvp.VotingPeriod <= 0 {
+			return fmt.Errorf("voting period must be positive for proposal voting period: %s", pvp.VotingPeriod)
+		}
 	}
 
 	return nil
@@ -195,4 +209,38 @@ func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 // DefaultParams default governance params
 func DefaultParams() Params {
 	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
+}
+
+func (pvp ProposalVotingPeriod) String() string {
+	out, _ := yaml.Marshal(pvp)
+	return string(out)
+}
+
+// ProposalVotingPeriods defines a type alias for a slice of ProposalVotingPeriod
+// objects.
+type ProposalVotingPeriods []ProposalVotingPeriod
+
+func (pvps ProposalVotingPeriods) Equal(other ProposalVotingPeriods) bool {
+	sort.Slice(pvps, func(i, j int) bool {
+		return strings.Compare(pvps[i].ProposalType, pvps[j].ProposalType) < 0
+	})
+
+	sort.Slice(other, func(i, j int) bool {
+		return strings.Compare(other[i].ProposalType, other[j].ProposalType) < 0
+	})
+
+	if len(pvps) != len(other) {
+		return false
+	}
+
+	for i := 0; i < len(pvps); i++ {
+		a := pvps[i]
+		b := other[i]
+
+		if strings.Compare(a.ProposalType, b.ProposalType) != 0 || a.VotingPeriod != b.VotingPeriod {
+			return false
+		}
+	}
+
+	return true
 }
