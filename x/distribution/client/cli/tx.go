@@ -20,6 +20,7 @@ import (
 var (
 	FlagCommission       = "commission"
 	FlagMaxMessagesPerTx = "max-msgs"
+	FlagIsExpedited      = "is-expedited"
 )
 
 const (
@@ -279,7 +280,7 @@ func GetCmdSubmitProposal() *cobra.Command {
 The proposal details must be supplied via a JSON file.
 
 Example:
-$ %s tx gov submit-proposal community-pool-spend <path/to/proposal.json> --from=<key_or_address>
+$ %s tx gov submit-proposal community-pool-spend <path/to/proposal.json> --from=<key_or_address> --is-expedited=false
 
 Where proposal.json contains:
 
@@ -321,7 +322,12 @@ Where proposal.json contains:
 			}
 			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			isExpedited, err := cmd.Flags().GetBool(FlagIsExpedited)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from, isExpedited)
 			if err != nil {
 				return err
 			}
@@ -329,6 +335,8 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	cmd.Flags().Bool(FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 
 	return cmd
 }
