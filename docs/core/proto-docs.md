@@ -347,6 +347,7 @@
     - [Deposit](#cosmos.gov.v1beta1.Deposit)
     - [DepositParams](#cosmos.gov.v1beta1.DepositParams)
     - [Proposal](#cosmos.gov.v1beta1.Proposal)
+    - [ProposalVotingPeriod](#cosmos.gov.v1beta1.ProposalVotingPeriod)
     - [TallyParams](#cosmos.gov.v1beta1.TallyParams)
     - [TallyResult](#cosmos.gov.v1beta1.TallyResult)
     - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
@@ -5115,6 +5116,23 @@ Proposal defines the core field members of a governance proposal.
 
 
 
+<a name="cosmos.gov.v1beta1.ProposalVotingPeriod"></a>
+
+### ProposalVotingPeriod
+ProposalVotingPeriod defines custom voting periods for a unique governance
+proposal type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_type` | [string](#string) |  | e.g. "cosmos.params.v1beta1.ParameterChangeProposal" |
+| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+
+
+
+
+
+
 <a name="cosmos.gov.v1beta1.TallyParams"></a>
 
 ### TallyParams
@@ -5194,7 +5212,8 @@ VotingParams defines the params for voting on governance proposals.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
+| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | voting_period defines the length of the voting period. |
+| `proposal_voting_periods` | [ProposalVotingPeriod](#cosmos.gov.v1beta1.ProposalVotingPeriod) | repeated | proposal_voting_periods defines custom voting periods for proposal types. |
 
 
 

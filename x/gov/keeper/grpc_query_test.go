@@ -505,7 +505,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			if testCase.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
-				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
+				suite.Require().True(expRes.GetVotingParams().Equal(params.GetVotingParams()))
 				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
 			} else {
 				suite.Require().Error(err)
