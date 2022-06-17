@@ -61,12 +61,12 @@ func GenTallyParamsQuorum(r *rand.Rand) sdk.Dec {
 
 // GenTallyParamsThreshold randomized TallyParamsThreshold
 func GenTallyParamsThreshold(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, tallyNonExpeditedMax+1)), 3)
+	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, tallyNonExpeditedMax)), 3)
 }
 
 // GenTallyParamsExpeditedThreshold randomized TallyParamsExpeditedThreshold
 func GenTallyParamsExpeditedThreshold(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax, 550)), 3)
+	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, tallyNonExpeditedMax+1, 550)), 3)
 }
 
 // GenTallyParamsVeto randomized TallyParamsVeto
