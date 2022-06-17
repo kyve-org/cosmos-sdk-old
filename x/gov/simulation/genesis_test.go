@@ -41,8 +41,8 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
 	dec1, _ := sdk.NewDecFromStr("0.400000000000000000")
-	dec2, _ := sdk.NewDecFromStr("0.458000000000000000")
-	dec3, _ := sdk.NewDecFromStr("0.528000000000000000")
+	dec2, _ := sdk.NewDecFromStr("0.489000000000000000")
+	dec3, _ := sdk.NewDecFromStr("0.509000000000000000")
 	dec4, _ := sdk.NewDecFromStr("0.324000000000000000")
 
 	require.Equal(t, "905stake", govGenesis.DepositParams.MinDeposit.String())
