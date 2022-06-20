@@ -66,6 +66,20 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 			return false
 		})
 
+		//
+		if keeper.rk != nil {
+			keeper.rk.IterateProtocolBonding(ctx, voter, func(poolId uint64, amount sdk.Int) (stop bool) {
+				for _, option := range vote.Options {
+					subPower := amount.ToDec().Mul(option.Weight)
+					results[option.Option] = results[option.Option].Add(subPower)
+				}
+
+				totalVotingPower = totalVotingPower.Add(amount.ToDec())
+
+				return false
+			})
+		}
+
 		keeper.deleteVote(ctx, vote.ProposalId, voter)
 		return false
 	})
@@ -89,14 +103,20 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 	tallyParams := keeper.GetTallyParams(ctx)
 	tallyResults = types.NewTallyResultFromMap(results)
 
+	totalProtocolBonded := sdk.ZeroInt()
+	if keeper.rk != nil {
+		totalProtocolBonded = keeper.rk.TotalProtocolBonding(ctx)
+	}
+	totalBonded := keeper.sk.TotalBondedTokens(ctx).Add(totalProtocolBonded)
+
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
-	if keeper.sk.TotalBondedTokens(ctx).IsZero() {
+	if totalBonded.IsZero() {
 		return false, false, tallyResults
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
+	percentVoting := totalVotingPower.Quo(totalBonded.ToDec())
 	if percentVoting.LT(tallyParams.Quorum) {
 		return false, true, tallyResults
 	}
