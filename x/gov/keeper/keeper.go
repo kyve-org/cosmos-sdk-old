@@ -23,6 +23,9 @@ type Keeper struct {
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
 
+	// The reference to the ProtocolDelegationSet and ProtocolValidatorSet to get information about protocol validators and delegators
+	rk types.RegistryKeeper
+
 	// GovHooks
 	hooks types.GovHooks
 
@@ -45,7 +48,7 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace types.ParamSubspace,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rtr types.Router,
+	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rk types.RegistryKeeper, rtr types.Router,
 ) Keeper {
 
 	// ensure governance module account is set
@@ -64,6 +67,7 @@ func NewKeeper(
 		authKeeper: authKeeper,
 		bankKeeper: bankKeeper,
 		sk:         sk,
+		rk:         rk,
 		cdc:        cdc,
 		router:     rtr,
 	}
