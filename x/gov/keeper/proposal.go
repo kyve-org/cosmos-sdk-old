@@ -194,7 +194,7 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
 	proposal.VotingStartTime = ctx.BlockHeader().Time
 
-	votingPeriod := keeper.GetVotingParams(ctx).GetVotingPeriod(proposal.IsExpedited)
+	votingPeriod := keeper.GetVotingPeriod(ctx, proposal.GetContent(), proposal.IsExpedited)
 	proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)
 	proposal.Status = types.StatusVotingPeriod
 
@@ -207,7 +207,7 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Propos
 // GetVotingPeriod returns the voting period for the given proposal Content. If
 // the proposal type has a custom voting period registered, we return that.
 // Otherwise, we use the default voting period.
-func (keeper Keeper) GetVotingPeriod(ctx sdk.Context, content types.Content) time.Duration {
+func (keeper Keeper) GetVotingPeriod(ctx sdk.Context, content types.Content, isExpedited bool) time.Duration {
 	vpParams := keeper.GetVotingParams(ctx)
 
 	// Check if there exists a registered custom voting period for the proposal
@@ -219,7 +219,7 @@ func (keeper Keeper) GetVotingPeriod(ctx sdk.Context, content types.Content) tim
 		}
 	}
 
-	return vpParams.VotingPeriod
+	return vpParams.GetVotingPeriod(isExpedited)
 }
 
 func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
