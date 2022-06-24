@@ -52,7 +52,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 		// If an expedited proposal fails, we do not want to update
 		// the deposit at this point since the proposal is converted to regular.
-		// As a result, the deposits are either deleted or refunded in all casses
+		// As a result, the deposits are either deleted or refunded in all cases
 		// EXCEPT when an expedited proposal fails.
 		if !(proposal.IsExpedited && !passes) {
 			if burnDeposits {
@@ -97,8 +97,8 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 				// once the regular voting period expires again, the tally is repeated
 				// according to the regular proposal rules.
 				proposal.IsExpedited = false
-				votingParams := keeper.GetVotingParams(ctx)
-				proposal.VotingEndTime = proposal.VotingStartTime.Add(votingParams.VotingPeriod)
+				votingPeriod := keeper.GetVotingPeriod(ctx, proposal.GetContent(), proposal.IsExpedited)
+				proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)
 
 				keeper.InsertActiveProposalQueue(ctx, proposal.ProposalId, proposal.VotingEndTime)
 
