@@ -17,7 +17,7 @@ import (
 const DefaultStartingProposalID uint64 = 1
 
 // NewProposal creates a new Proposal instance
-func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time, isExpedited bool) (Proposal, error) {
 	msg, ok := content.(proto.Message)
 	if !ok {
 		return Proposal{}, fmt.Errorf("%T does not implement proto.Message", content)
@@ -36,6 +36,7 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 		TotalDeposit:     sdk.NewCoins(),
 		SubmitTime:       submitTime,
 		DepositEndTime:   depositEndTime,
+		IsExpedited:      isExpedited,
 	}
 
 	return p, nil
@@ -78,6 +79,16 @@ func (p Proposal) GetTitle() string {
 		return ""
 	}
 	return content.GetTitle()
+}
+
+// GetMinDepositFromParams returns min expedited deposit from depositParams if
+// the proposal is expedited. Otherwise, returns the regular min deposit from
+// depositParams.
+func (p Proposal) GetMinDepositFromParams(depositParams DepositParams) sdk.Coins {
+	if p.IsExpedited {
+		return depositParams.MinExpeditedDeposit
+	}
+	return depositParams.MinDeposit
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

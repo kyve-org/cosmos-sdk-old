@@ -347,6 +347,7 @@
     - [Deposit](#cosmos.gov.v1beta1.Deposit)
     - [DepositParams](#cosmos.gov.v1beta1.DepositParams)
     - [Proposal](#cosmos.gov.v1beta1.Proposal)
+    - [ProposalVotingPeriod](#cosmos.gov.v1beta1.ProposalVotingPeriod)
     - [TallyParams](#cosmos.gov.v1beta1.TallyParams)
     - [TallyResult](#cosmos.gov.v1beta1.TallyResult)
     - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
@@ -5086,6 +5087,7 @@ DepositParams defines the params for deposits on governance proposals.
 | ----- | ---- | ----- | ----------- |
 | `min_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Minimum deposit for a proposal to enter voting period. |
 | `max_deposit_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months. |
+| `min_expedited_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Minimum expedited deposit for a proposal to enter voting period. |
 
 
 
@@ -5109,6 +5111,24 @@ Proposal defines the core field members of a governance proposal.
 | `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `voting_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `voting_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `is_expedited` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.ProposalVotingPeriod"></a>
+
+### ProposalVotingPeriod
+ProposalVotingPeriod defines custom voting periods for a unique governance
+proposal type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_type` | [string](#string) |  | e.g. "cosmos.params.v1beta1.ParameterChangeProposal" |
+| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 
 
 
@@ -5126,6 +5146,7 @@ TallyParams defines the params for tallying votes on governance proposals.
 | `quorum` | [bytes](#bytes) |  | Minimum percentage of total stake needed to vote for a result to be considered valid. |
 | `threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for proposal to pass. Default value: 0.5. |
 | `veto_threshold` | [bytes](#bytes) |  | Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3. |
+| `expedited_threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for an expedited proposal to pass. Default value: 0.67. |
 
 
 
@@ -5194,7 +5215,9 @@ VotingParams defines the params for voting on governance proposals.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
+| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | voting_period defines the length of the voting period. |
+| `proposal_voting_periods` | [ProposalVotingPeriod](#cosmos.gov.v1beta1.ProposalVotingPeriod) | repeated | proposal_voting_periods defines custom voting periods for proposal types. |
+| `expedited_voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | expedited_voting_period defines the length of the expedited voting period. |
 
 
 
@@ -5628,6 +5651,7 @@ proposal Content.
 | `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `initial_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `proposer` | [string](#string) |  |  |
+| `is_expedited` | [bool](#bool) |  |  |
 
 
 
