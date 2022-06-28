@@ -779,6 +779,7 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
+		nil,
 		app.GetSubspace(types.ModuleName),
 	)
 
