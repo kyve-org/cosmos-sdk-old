@@ -23,6 +23,7 @@ const (
 var (
 	DefaultMinDepositTokens          = sdk.NewInt(10000000)
 	DefaultMinExpeditedDepositTokens = sdk.NewInt(10000000 * 5)
+	DefaultMinDepositPercentage      = sdk.ZeroDec()
 	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
 	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
 	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
@@ -48,11 +49,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, minExpeditedDeposit sdk.Coins) DepositParams {
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, minExpeditedDeposit sdk.Coins, minDepositPercentage sdk.Dec) DepositParams {
 	return DepositParams{
-		MinDeposit:          minDeposit,
-		MaxDepositPeriod:    maxDepositPeriod,
-		MinExpeditedDeposit: minExpeditedDeposit,
+		MinDeposit:           minDeposit,
+		MaxDepositPeriod:     maxDepositPeriod,
+		MinExpeditedDeposit:  minExpeditedDeposit,
+		MinDepositPercentage: minDepositPercentage,
 	}
 }
 
@@ -62,6 +64,7 @@ func DefaultDepositParams() DepositParams {
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		DefaultPeriod,
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinExpeditedDepositTokens)),
+		DefaultMinDepositPercentage,
 	)
 }
 
@@ -72,8 +75,8 @@ func (dp DepositParams) String() string {
 }
 
 // Equal checks equality of DepositParams
-func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+func (dp DepositParams) Equal(other DepositParams) bool {
+	return dp.MinDeposit.IsEqual(other.MinDeposit) && other.MaxDepositPeriod == other.MaxDepositPeriod && dp.MinExpeditedDeposit.IsEqual(other.MinExpeditedDeposit) && dp.MinDepositPercentage.Equal(other.MinDepositPercentage)
 }
 
 func validateDepositParams(i interface{}) error {
@@ -95,6 +98,12 @@ func validateDepositParams(i interface{}) error {
 	}
 	if minExpeditedDeposit.IsAllLTE(minDeposit) {
 		return fmt.Errorf("minimum expedited deposit %s must be greater than expedited deposit %s", minExpeditedDeposit, minDeposit)
+	}
+	if v.MinDepositPercentage.IsNegative() {
+		return fmt.Errorf("minimum deposit percentage cannot be negative: %s", v.MinDepositPercentage)
+	}
+	if v.MinDepositPercentage.GT(sdk.OneDec()) {
+		return fmt.Errorf("minimum deposit percentage too large: %s", v)
 	}
 
 	return nil

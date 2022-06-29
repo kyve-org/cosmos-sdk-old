@@ -4,6 +4,7 @@ import (
 	gocontext "context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -483,8 +484,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			func() {
 				req = &types.QueryParamsRequest{ParamsType: types.ParamVoting}
 				expRes = &types.QueryParamsResponse{
-					VotingParams: types.DefaultVotingParams(),
-					TallyParams:  types.NewTallyParams(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0)),
+					VotingParams:  types.DefaultVotingParams(),
+					DepositParams: types.NewDepositParams(sdk.NewCoins(), time.Second*0, sdk.NewCoins(), sdk.ZeroDec()),
+					TallyParams:   types.NewTallyParams(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0)),
 				}
 			},
 			true,
@@ -494,7 +496,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			func() {
 				req = &types.QueryParamsRequest{ParamsType: types.ParamTallying}
 				expRes = &types.QueryParamsResponse{
-					TallyParams: types.DefaultTallyParams(),
+					DepositParams: types.NewDepositParams(sdk.NewCoins(), time.Second*0, sdk.NewCoins(), sdk.ZeroDec()),
+					TallyParams:   types.DefaultTallyParams(),
 				}
 			},
 			true,
@@ -517,7 +520,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
+				suite.Require().True(expRes.GetDepositParams().Equal(params.GetDepositParams()))
 				suite.Require().True(expRes.GetVotingParams().Equal(params.GetVotingParams()))
 				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
 			} else {

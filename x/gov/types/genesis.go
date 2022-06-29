@@ -86,6 +86,12 @@ func ValidateGenesis(data *GenesisState) error {
 			minDeposit.String())
 	}
 
+	minDepositPercentage := data.DepositParams.MinDepositPercentage
+	if minDepositPercentage.IsNegative() || minDepositPercentage.GT(sdk.OneDec()) {
+		return fmt.Errorf("governance min deposit percentage should be positive and less or equal to one, is %s",
+			minDepositPercentage.String())
+	}
+
 	return nil
 }
 

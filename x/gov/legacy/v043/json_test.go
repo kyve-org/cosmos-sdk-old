@@ -51,6 +51,7 @@ func TestMigrateJSON(t *testing.T) {
 	"deposit_params": {
 		"max_deposit_period": "0s",
 		"min_deposit": [],
+		"min_deposit_percentage": "0",
 		"min_expedited_deposit": []
 	},
 	"deposits": [],
