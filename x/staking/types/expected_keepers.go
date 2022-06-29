@@ -39,6 +39,11 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
+// RegistryKeeper defines the expected registry keeper (noalias)
+type RegistryKeeper interface {
+	TotalProtocolBonding(ctx sdk.Context) sdk.Int
+}
+
 // ValidatorSet expected properties for the set of all validators (noalias)
 type ValidatorSet interface {
 	// iterate through validators by operator address, execute func for each validator
