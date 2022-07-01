@@ -57,21 +57,12 @@ func (k Keeper) burnNotBondedTokens(ctx sdk.Context, amt sdk.Int) error {
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded
-// NOTE: This has been updated to include tokens locked in KYVE's protocol.
 func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 	bondedPool := k.GetBondedPool(ctx)
-	chainBonding := k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), k.BondDenom(ctx)).Amount
-
-	protocolBonding := sdk.ZeroInt()
-	if k.registryKeeper != nil {
-		k.registryKeeper.TotalProtocolBonding(ctx)
-	}
-
-	return chainBonding.Add(protocolBonding)
+	return k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), k.BondDenom(ctx)).Amount
 }
 
 // StakingTokenSupply staking tokens from the total supply
-// NOTE: The KYVE chain and protocol must be using the same bonding denom.
 func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 	return k.bankKeeper.GetSupply(ctx, k.BondDenom(ctx)).Amount
 }
