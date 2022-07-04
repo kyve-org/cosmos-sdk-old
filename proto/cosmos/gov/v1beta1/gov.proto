@@ -168,6 +168,14 @@ message DepositParams {
     (gogoproto.moretags)     = "yaml:\"min_expedited_deposit\"",
     (gogoproto.jsontag)      = "min_expedited_deposit,omitempty"
   ];
+
+  //  TODO
+  bytes min_deposit_percentage = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "min_deposit_percentage,omitempty",
+    (gogoproto.moretags)   = "yaml:\"min_deposit_percentage\""
+  ];
 }
 
 // VotingParams defines the params for voting on governance proposals.

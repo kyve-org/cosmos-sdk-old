@@ -117,6 +117,20 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return false, sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
+	// Check if deposit is enough.
+	depositParams := keeper.GetDepositParams(ctx)
+	minDepositAmount := proposal.GetMinDepositFromParams(depositParams)
+
+	adjustedMinDeposit := sdk.NewCoins()
+	for _, coin := range minDepositAmount {
+		amount := coin.Amount.ToDec().Mul(depositParams.MinDepositPercentage).RoundInt()
+		adjustedMinDeposit = adjustedMinDeposit.Add(sdk.NewCoin(coin.Denom, amount))
+	}
+
+	if !depositAmount.IsAllGTE(adjustedMinDeposit) {
+		return false, sdkerrors.Wrapf(types.ErrInvalidDeposit, "%s", depositAmount.String())
+	}
+
 	// update the governance module's account coins pool
 	err := keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {
@@ -130,7 +144,6 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
 
-	minDepositAmount := proposal.GetMinDepositFromParams(keeper.GetDepositParams(ctx))
 	if proposal.Status == types.StatusDepositPeriod && proposal.TotalDeposit.IsAllGTE(minDepositAmount) {
 		keeper.ActivateVotingPeriod(ctx, proposal)
 
