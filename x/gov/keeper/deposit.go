@@ -118,7 +118,6 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Check if deposit is enough.
-	// TODO: Return an error message.
 	depositParams := keeper.GetDepositParams(ctx)
 	minDepositAmount := proposal.GetMinDepositFromParams(depositParams)
 
@@ -129,7 +128,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	if !depositAmount.IsAllGTE(adjustedMinDeposit) {
-		return false, nil
+		return false, sdkerrors.Wrapf(types.ErrInvalidDeposit, "%s", depositAmount.String())
 	}
 
 	// update the governance module's account coins pool
