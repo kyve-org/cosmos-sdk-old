@@ -124,7 +124,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	adjustedMinDeposit := sdk.NewCoins()
 	for _, coin := range minDepositAmount {
 		amount := coin.Amount.ToDec().Mul(depositParams.MinDepositPercentage).RoundInt()
-		adjustedMinDeposit.Add(sdk.NewCoin(coin.Denom, amount))
+		adjustedMinDeposit = adjustedMinDeposit.Add(sdk.NewCoin(coin.Denom, amount))
 	}
 
 	if !depositAmount.IsAllGTE(adjustedMinDeposit) {
