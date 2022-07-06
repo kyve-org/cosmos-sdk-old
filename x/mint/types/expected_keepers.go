@@ -11,6 +11,11 @@ type StakingKeeper interface {
 	BondedRatio(ctx sdk.Context) sdk.Dec
 }
 
+// RegistryKeeper defines the expected registry keeper
+type RegistryKeeper interface {
+	TotalProtocolBonding(ctx sdk.Context) sdk.Int
+}
+
 // AccountKeeper defines the contract required for account APIs.
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress

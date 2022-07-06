@@ -15,6 +15,7 @@ type Keeper struct {
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
 	stakingKeeper    types.StakingKeeper
+	registryKeeper   types.RegistryKeeper
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
 }
@@ -22,7 +23,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	sk types.StakingKeeper, ak types.AccountKeeper, bk types.BankKeeper,
+	sk types.StakingKeeper, rk types.RegistryKeeper, ak types.AccountKeeper, bk types.BankKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -40,6 +41,7 @@ func NewKeeper(
 		storeKey:         key,
 		paramSpace:       paramSpace,
 		stakingKeeper:    sk,
+		registryKeeper:   rk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 	}
@@ -86,10 +88,23 @@ func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 	return k.stakingKeeper.StakingTokenSupply(ctx)
 }
 
-// BondedRatio implements an alias call to the underlying staking keeper's
+// ProtocolBondedRatio is the fraction of tokens that are currently bonded in the protocol.
+func (k Keeper) ProtocolBondedRatio(ctx sdk.Context) sdk.Dec {
+	stakeSupply := k.StakingTokenSupply(ctx)
+	if stakeSupply.IsPositive() {
+		return k.registryKeeper.TotalProtocolBonding(ctx).ToDec().QuoInt(stakeSupply)
+	}
+
+	return sdk.ZeroDec()
+}
+
+// BondedRatio is the fraction of tokens that are currently bonded.
 // BondedRatio to be used in BeginBlocker.
 func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	return k.stakingKeeper.BondedRatio(ctx)
+	chainBondedRatio := k.stakingKeeper.BondedRatio(ctx)
+	protocolBondedRatio := k.ProtocolBondedRatio(ctx)
+
+	return chainBondedRatio.Add(protocolBondedRatio)
 }
 
 // MintCoins implements an alias call to the underlying supply keeper's
