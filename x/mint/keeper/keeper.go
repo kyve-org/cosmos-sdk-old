@@ -92,7 +92,9 @@ func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 func (k Keeper) ProtocolBondedRatio(ctx sdk.Context) sdk.Dec {
 	stakeSupply := k.StakingTokenSupply(ctx)
 	if stakeSupply.IsPositive() {
-		return k.registryKeeper.TotalProtocolBonding(ctx).ToDec().QuoInt(stakeSupply)
+		if k.registryKeeper != nil {
+			return k.registryKeeper.TotalProtocolBonding(ctx).ToDec().QuoInt(stakeSupply)
+		}
 	}
 
 	return sdk.ZeroDec()
