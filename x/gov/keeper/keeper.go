@@ -27,6 +27,9 @@ type Keeper struct {
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
 
+	// The reference to the DelegationSet and ValidatorSet to get information about protocol validators and delegators
+	rk types.RegistryKeeper
+
 	// GovHooks
 	hooks types.GovHooks
 
@@ -55,7 +58,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
+	rk types.RegistryKeeper, legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
 	config types.Config,
 ) Keeper {
 	// ensure governance module account is set
@@ -79,6 +82,7 @@ func NewKeeper(
 		authKeeper:   authKeeper,
 		bankKeeper:   bankKeeper,
 		sk:           sk,
+		rk:           rk,
 		cdc:          cdc,
 		legacyRouter: legacyRouter,
 		router:       router,

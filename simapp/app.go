@@ -309,7 +309,7 @@ func NewSimApp(
 	*/
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, govRouter, app.MsgServiceRouter(), govConfig,
+		&stakingKeeper, nil, govRouter, app.MsgServiceRouter(), govConfig,
 	)
 
 	app.GovKeeper = *govKeeper.SetHooks(
