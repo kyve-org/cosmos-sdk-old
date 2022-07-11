@@ -66,14 +66,15 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 			testProposal(proposal.ParamChange{
 				Subspace: govtypes.ModuleName,
 				Key:      string(govv1.ParamStoreKeyDepositParams),
-				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}], "max_deposit_period": "172800000000000"}`,
+				Value:    `{"min_deposit": [{"denom": "uatom","amount": "25000000"}], "max_deposit_period": "172800000000000"}`,
 			}),
 			func() {
 				depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
 				defaultPeriod := govv1.DefaultPeriod
 				suite.Require().Equal(govv1.DepositParams{
-					MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
-					MaxDepositPeriod: &defaultPeriod,
+					MinDeposit:          sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(25000000))),
+					MaxDepositPeriod:    &defaultPeriod,
+					MinExpeditedDeposit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(50000000))),
 				}, depositParams)
 			},
 			false,

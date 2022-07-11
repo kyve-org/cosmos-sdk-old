@@ -17,11 +17,12 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens   = sdk.NewInt(10000000)
-	DefaultQuorum             = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold          = sdk.NewDecWithPrec(5, 1)
-	DefaultExpeditedThreshold = sdk.NewDecWithPrec(667, 3)
-	DefaultVetoThreshold      = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens          = sdk.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens = sdk.NewInt(10000000 * 5)
+	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
+	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
 )
 
 // Parameter store key
@@ -41,10 +42,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, minExpeditedDeposit sdk.Coins) DepositParams {
 	return DepositParams{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: &maxDepositPeriod,
+		MinDeposit:          minDeposit,
+		MaxDepositPeriod:    &maxDepositPeriod,
+		MinExpeditedDeposit: minExpeditedDeposit,
 	}
 }
 
@@ -53,12 +55,21 @@ func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		DefaultPeriod,
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinExpeditedDepositTokens)),
 	)
+}
+
+// GetMinDeposit returns minimum deposit based on whether isExpedited is requested.
+func (dp DepositParams) GetMinDeposit(isExpedited bool) sdk.Coins {
+	if isExpedited {
+		return dp.MinExpeditedDeposit
+	}
+	return dp.MinDeposit
 }
 
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return sdk.Coins(dp.MinDeposit).IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return sdk.Coins(dp.MinDeposit).IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod && sdk.Coins(dp.MinExpeditedDeposit).IsEqual(dp2.MinExpeditedDeposit)
 }
 
 func validateDepositParams(i interface{}) error {
@@ -70,8 +81,16 @@ func validateDepositParams(i interface{}) error {
 	if !sdk.Coins(v.MinDeposit).IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
 	}
+
 	if v.MaxDepositPeriod == nil || v.MaxDepositPeriod.Seconds() <= 0 {
 		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
+	}
+
+	if !sdk.Coins(v.MinExpeditedDeposit).IsValid() {
+		return fmt.Errorf("invalid minimum expedited deposit: %s", v.MinExpeditedDeposit)
+	}
+	if sdk.Coins(v.MinExpeditedDeposit).IsAllLTE(v.MinDeposit) {
+		return fmt.Errorf("minimum expedited deposit %s, must be greater than regular deposit %s", v.MinExpeditedDeposit, v.MinDeposit)
 	}
 
 	return nil
