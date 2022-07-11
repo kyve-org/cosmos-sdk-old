@@ -18,11 +18,12 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata string) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata string, isExpedited bool) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
 		Metadata:       metadata,
+		IsExpedited:    isExpedited,
 	}
 
 	anys, err := sdktx.SetMsgs(messages)

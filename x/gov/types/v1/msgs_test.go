@@ -142,22 +142,23 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 
 	tests := []struct {
 		name           string
+		isExpedited    bool
 		proposer       string
 		initialDeposit sdk.Coins
 		messages       []sdk.Msg
 		metadata       string
 		expErr         bool
 	}{
-		{"invalid addr", "", coinsPos, []sdk.Msg{msg1}, metadata, true},
-		{"empty msgs and metadata", addrs[0].String(), coinsPos, nil, "", true},
-		{"invalid msg", addrs[0].String(), coinsPos, []sdk.Msg{msg1, msg2}, metadata, true},
-		{"valid with no Msg", addrs[0].String(), coinsPos, nil, metadata, false},
-		{"valid with no metadata", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, "", false},
-		{"valid with everything", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, false},
+		{"invalid addr", false, "", coinsPos, []sdk.Msg{msg1}, metadata, true},
+		{"empty msgs and metadata", false, addrs[0].String(), coinsPos, nil, "", true},
+		{"invalid msg", false, addrs[0].String(), coinsPos, []sdk.Msg{msg1, msg2}, metadata, true},
+		{"valid with no Msg", false, addrs[0].String(), coinsPos, nil, metadata, false},
+		{"valid with no metadata", false, addrs[0].String(), coinsPos, []sdk.Msg{msg1}, "", false},
+		{"valid with everything", false, addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, false},
 	}
 
 	for _, tc := range tests {
-		msg, err := v1.NewMsgSubmitProposal(tc.messages, tc.initialDeposit, tc.proposer, tc.metadata)
+		msg, err := v1.NewMsgSubmitProposal(tc.messages, tc.initialDeposit, tc.proposer, tc.metadata, tc.isExpedited)
 		require.NoError(t, err)
 		if tc.expErr {
 			require.Error(t, msg.ValidateBasic(), "test: %s", tc.name)
@@ -170,7 +171,7 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 	proposal := []sdk.Msg{v1.NewMsgVote(addrs[0], 1, v1.OptionYes, "")}
-	msg, err := v1.NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "")
+	msg, err := v1.NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "", false)
 	require.NoError(t, err)
 	var bz []byte
 	require.NotPanics(t, func() {

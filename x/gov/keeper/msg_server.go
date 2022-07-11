@@ -36,7 +36,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.IsExpedited)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +230,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		msg.InitialDeposit,
 		msg.Proposer,
 		"",
+		false,
 	)
 	if err != nil {
 		return nil, err

@@ -18,7 +18,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 
 	dp := v1.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, v1.DefaultMinDepositTokens)), time.Duration(15)*time.Second)
-	vp := v1.NewVotingParams(time.Duration(5) * time.Second)
+	vp := v1.NewVotingParams(time.Duration(5)*time.Second, time.Duration(2)*time.Second)
 	genesisState := v1.DefaultGenesisState()
 	genesisState.DepositParams = &dp
 	genesisState.VotingParams = &vp

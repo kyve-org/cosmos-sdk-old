@@ -26,6 +26,7 @@ const (
 	FlagDescription = "description"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
+	FlagIsExpedited  = "is-expedited"
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
@@ -89,7 +90,7 @@ func NewCmdSubmitProposal() *cobra.Command {
 They should be defined in a JSON file.
 
 Example:
-$ %s tx gov submit-proposal path/to/proposal.json
+$ %s tx gov submit-proposal path/to/proposal.json --is-expedited true
 
 Where proposal.json contains:
 
@@ -121,7 +122,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
+			isExpedited, err := cmd.Flags().GetBool(FlagIsExpedited)
+			if err != nil {
+				return err
+			}
+
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, isExpedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -131,6 +137,7 @@ Where proposal.json contains:
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Bool(FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 
 	return cmd
 }

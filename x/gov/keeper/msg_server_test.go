@@ -36,6 +36,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					initialDeposit,
 					proposer.String(),
 					strings.Repeat("1", 300),
+					false,
 				)
 			},
 			expErr:    true,
@@ -48,6 +49,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					initialDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 			},
 			expErr:    true,
@@ -60,6 +62,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					initialDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 			},
 			expErr:    true,
@@ -72,6 +75,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					initialDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 			},
 			expErr:    true,
@@ -84,6 +88,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					initialDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 			},
 			expErr: false,
@@ -95,6 +100,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					minDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 			},
 			expErr: false,
@@ -135,6 +141,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 		minDeposit,
 		proposer.String(),
 		"",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -158,6 +165,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 					coins,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -199,6 +207,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 					minDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -247,6 +256,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 		minDeposit,
 		proposer.String(),
 		"",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -271,6 +281,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 					coins,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -312,6 +323,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 					minDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -360,6 +372,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 		coins,
 		proposer.String(),
 		"",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -478,6 +491,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 		minDeposit,
 		proposer.String(),
 		"",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -501,6 +515,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					coins,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -532,6 +547,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					minDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -580,6 +596,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 		minDeposit,
 		proposer.String(),
 		"",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -604,6 +621,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					coins,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -635,6 +653,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					minDeposit,
 					proposer.String(),
 					"",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -683,6 +702,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 		coins,
 		proposer.String(),
 		"",
+		false,
 	)
 	suite.Require().NoError(err)
 

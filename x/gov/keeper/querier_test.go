@@ -159,7 +159,7 @@ func TestQueries(t *testing.T) {
 	depositParams, _, _ := getQueriedParams(t, ctx, legacyQuerierCdc, querier)
 
 	// TestAddrs[0] proposes (and deposits) proposals #1 and #2
-	proposal1, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
+	proposal1, err := app.GovKeeper.SubmitProposal(ctx, tp, "", false)
 	require.NoError(t, err)
 	deposit1 := v1.NewDeposit(proposal1.Id, TestAddrs[0], oneCoins)
 	depositer1, err := sdk.AccAddressFromBech32(deposit1.Depositor)
@@ -169,7 +169,7 @@ func TestQueries(t *testing.T) {
 
 	proposal1.TotalDeposit = sdk.NewCoins(proposal1.TotalDeposit...).Add(deposit1.Amount...)
 
-	proposal2, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
+	proposal2, err := app.GovKeeper.SubmitProposal(ctx, tp, "", false)
 	require.NoError(t, err)
 	deposit2 := v1.NewDeposit(proposal2.Id, TestAddrs[0], consCoins)
 	depositer2, err := sdk.AccAddressFromBech32(deposit2.Depositor)
@@ -180,7 +180,7 @@ func TestQueries(t *testing.T) {
 	proposal2.TotalDeposit = sdk.NewCoins(proposal2.TotalDeposit...).Add(deposit2.Amount...)
 
 	// TestAddrs[1] proposes (and deposits) on proposal #3
-	proposal3, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
+	proposal3, err := app.GovKeeper.SubmitProposal(ctx, tp, "", false)
 	require.NoError(t, err)
 	deposit3 := v1.NewDeposit(proposal3.Id, TestAddrs[1], oneCoins)
 	depositer3, err := sdk.AccAddressFromBech32(deposit3.Depositor)

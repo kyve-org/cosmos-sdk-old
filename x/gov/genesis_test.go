@@ -33,11 +33,11 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	// Create two proposals, put the second into the voting period
-	proposal1, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal1, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", false)
 	require.NoError(t, err)
 	proposalID1 := proposal1.Id
 
-	proposal2, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal2, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", false)
 	require.NoError(t, err)
 	proposalID2 := proposal2.Id
 

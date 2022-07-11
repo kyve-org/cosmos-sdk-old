@@ -11,7 +11,7 @@ import (
 )
 
 // SubmitProposal creates a new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata string) (v1.Proposal, error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata string, isExpedited bool) (v1.Proposal, error) {
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
 		return v1.Proposal{}, err
@@ -68,7 +68,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod), isExpedited)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -234,13 +234,20 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
+// ActivateVotingPeriod moves the governance proposal from the deposit stage to
+// the voting stage, given that enough deposits have been submitted. It is
+// removed from the inactive proposal queue and moved into the active queue.
+// Note, if the proposal's contents has a custom voting period registered, that
+// voting period is used instead of the base voting period.
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal) {
 	startTime := ctx.BlockHeader().Time
 	proposal.VotingStartTime = &startTime
-	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
-	endTime := proposal.VotingStartTime.Add(*votingPeriod)
+
+	votingPeriod := keeper.GetVotingParams(ctx).GetVotingPeriod(proposal.IsExpedited)
+	endTime := proposal.VotingStartTime.Add(votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod
+
 	keeper.SetProposal(ctx, proposal)
 
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
