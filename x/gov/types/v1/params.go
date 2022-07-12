@@ -19,6 +19,7 @@ const (
 var (
 	DefaultMinDepositTokens          = sdk.NewInt(10000000)
 	DefaultMinExpeditedDepositTokens = sdk.NewInt(10000000 * 5)
+	DefaultMinDepositPercentage      = sdk.ZeroDec()
 	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
 	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
 	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
@@ -42,11 +43,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, minExpeditedDeposit sdk.Coins) DepositParams {
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, minExpeditedDeposit sdk.Coins, minDepositPercentage sdk.Dec) DepositParams {
 	return DepositParams{
-		MinDeposit:          minDeposit,
-		MaxDepositPeriod:    &maxDepositPeriod,
-		MinExpeditedDeposit: minExpeditedDeposit,
+		MinDeposit:           minDeposit,
+		MaxDepositPeriod:     &maxDepositPeriod,
+		MinExpeditedDeposit:  minExpeditedDeposit,
+		MinDepositPercentage: minDepositPercentage.String(),
 	}
 }
 
@@ -56,6 +58,7 @@ func DefaultDepositParams() DepositParams {
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		DefaultPeriod,
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinExpeditedDepositTokens)),
+		DefaultMinDepositPercentage,
 	)
 }
 
@@ -67,9 +70,23 @@ func (dp DepositParams) GetMinDeposit(isExpedited bool) sdk.Coins {
 	return dp.MinDeposit
 }
 
+// GetAdjustedDeposit returns the required minimum deposit needed when submitting a proposal.
+func (dp DepositParams) GetAdjustedDeposit(isExpedited bool) sdk.Coins {
+	minDeposit := dp.GetMinDeposit(isExpedited)
+	minDepositPercentage, _ := sdk.NewDecFromStr(dp.MinDepositPercentage)
+
+	adjustedMinDeposit := sdk.NewCoins()
+	for _, coin := range minDeposit {
+		amount := sdk.NewDecFromInt(coin.Amount).Mul(minDepositPercentage).RoundInt()
+		adjustedMinDeposit = adjustedMinDeposit.Add(sdk.NewCoin(coin.Denom, amount))
+	}
+
+	return adjustedMinDeposit
+}
+
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return sdk.Coins(dp.MinDeposit).IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod && sdk.Coins(dp.MinExpeditedDeposit).IsEqual(dp2.MinExpeditedDeposit)
+	return sdk.Coins(dp.MinDeposit).IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod && sdk.Coins(dp.MinExpeditedDeposit).IsEqual(dp2.MinExpeditedDeposit) && dp.MinDepositPercentage == dp2.MinDepositPercentage
 }
 
 func validateDepositParams(i interface{}) error {
@@ -91,6 +108,17 @@ func validateDepositParams(i interface{}) error {
 	}
 	if sdk.Coins(v.MinExpeditedDeposit).IsAllLTE(v.MinDeposit) {
 		return fmt.Errorf("minimum expedited deposit %s, must be greater than regular deposit %s", v.MinExpeditedDeposit, v.MinDeposit)
+	}
+
+	minDepositPercentage, err := sdk.NewDecFromStr(v.MinDepositPercentage)
+	if err != nil {
+		return fmt.Errorf("invalid min deposit percentage string: %w", err)
+	}
+	if minDepositPercentage.IsNegative() {
+		return fmt.Errorf("min deposit percentage cannot be negative: %s", minDepositPercentage)
+	}
+	if minDepositPercentage.GT(sdk.OneDec()) {
+		return fmt.Errorf("min deposit percentage too large: %s", v)
 	}
 
 	return nil

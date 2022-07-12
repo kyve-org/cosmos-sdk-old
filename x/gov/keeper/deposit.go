@@ -118,6 +118,12 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return false, sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
+	// Check if deposit is enough.
+	adjustedMinDeposit := keeper.GetDepositParams(ctx).GetAdjustedDeposit(proposal.IsExpedited)
+	if !depositAmount.IsAllGTE(adjustedMinDeposit) {
+		return false, sdkerrors.Wrapf(types.ErrInvalidDeposit, "%s", depositAmount.String())
+	}
+
 	// update the governance module's account coins pool
 	err := keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {

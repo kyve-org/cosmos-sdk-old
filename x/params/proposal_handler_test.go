@@ -71,10 +71,12 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 			func() {
 				depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
 				defaultPeriod := govv1.DefaultPeriod
+				defaultPercentage := govv1.DefaultMinDepositPercentage
 				suite.Require().Equal(govv1.DepositParams{
-					MinDeposit:          sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(25000000))),
-					MaxDepositPeriod:    &defaultPeriod,
-					MinExpeditedDeposit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(50000000))),
+					MinDeposit:           sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(25000000))),
+					MaxDepositPeriod:     &defaultPeriod,
+					MinExpeditedDeposit:  sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(50000000))),
+					MinDepositPercentage: defaultPercentage.String(),
 				}, depositParams)
 			},
 			false,

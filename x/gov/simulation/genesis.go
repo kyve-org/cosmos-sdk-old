@@ -141,7 +141,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		v1.NewDepositParams(minDeposit, depositPeriod, minExpeditedDeposit),
+		v1.NewDepositParams(minDeposit, depositPeriod, minExpeditedDeposit, sdk.ZeroDec()),
 		v1.NewVotingParams(votingPeriod, expeditedVotingPeriod),
 		v1.NewTallyParams(quorum, threshold, expeditedThreshold, veto),
 	)
