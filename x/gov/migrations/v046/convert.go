@@ -19,6 +19,7 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 		ProposalId:   proposal.Id,
 		Status:       v1beta1.ProposalStatus(proposal.Status),
 		TotalDeposit: types.NewCoins(proposal.TotalDeposit...),
+		IsExpedited:  proposal.IsExpedited,
 	}
 
 	legacyProposal.FinalTallyResult, err = ConvertToLegacyTallyResult(proposal.FinalTallyResult)
@@ -165,22 +166,26 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 
 func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1.DepositParams {
 	return v1.DepositParams{
-		MinDeposit:       oldDepParams.MinDeposit,
-		MaxDepositPeriod: &oldDepParams.MaxDepositPeriod,
+		MinDeposit:           oldDepParams.MinDeposit,
+		MaxDepositPeriod:     &oldDepParams.MaxDepositPeriod,
+		MinExpeditedDeposit:  oldDepParams.MinExpeditedDeposit,
+		MinDepositPercentage: oldDepParams.MinDepositPercentage.String(),
 	}
 }
 
 func convertToNewVotingParams(oldVoteParams v1beta1.VotingParams) v1.VotingParams {
 	return v1.VotingParams{
-		VotingPeriod: &oldVoteParams.VotingPeriod,
+		VotingPeriod:          &oldVoteParams.VotingPeriod,
+		ExpeditedVotingPeriod: &oldVoteParams.VotingPeriod,
 	}
 }
 
 func convertToNewTallyParams(oldTallyParams v1beta1.TallyParams) v1.TallyParams {
 	return v1.TallyParams{
-		Quorum:        oldTallyParams.Quorum.String(),
-		Threshold:     oldTallyParams.Threshold.String(),
-		VetoThreshold: oldTallyParams.VetoThreshold.String(),
+		Quorum:             oldTallyParams.Quorum.String(),
+		Threshold:          oldTallyParams.Threshold.String(),
+		ExpeditedThreshold: oldTallyParams.ExpeditedThreshold.String(),
+		VetoThreshold:      oldTallyParams.VetoThreshold.String(),
 	}
 }
 
@@ -209,6 +214,7 @@ func convertToNewProposal(oldProp v1beta1.Proposal) (v1.Proposal, error) {
 		TotalDeposit:    oldProp.TotalDeposit,
 		VotingStartTime: &oldProp.VotingStartTime,
 		VotingEndTime:   &oldProp.VotingEndTime,
+		IsExpedited:     oldProp.IsExpedited,
 	}, nil
 }
 
