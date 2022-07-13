@@ -1,7 +1,10 @@
 package v1beta1
 
 import (
+	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"sigs.k8s.io/yaml"
@@ -11,22 +14,28 @@ import (
 
 // Default period for deposits & voting
 const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultPeriod          time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultExpeditedPeriod time.Duration = time.Hour * 24     // 1 day
 )
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens          = sdk.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens = sdk.NewInt(10000000 * 5)
+	DefaultMinDepositPercentage      = sdk.ZeroDec()
+	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
+	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
 )
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, minExpeditedDeposit sdk.Coins, minDepositPercentage sdk.Dec) DepositParams {
 	return DepositParams{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: maxDepositPeriod,
+		MinDeposit:           minDeposit,
+		MaxDepositPeriod:     maxDepositPeriod,
+		MinExpeditedDeposit:  minExpeditedDeposit,
+		MinDepositPercentage: minDepositPercentage,
 	}
 }
 
@@ -35,6 +44,8 @@ func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		DefaultPeriod,
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinExpeditedDepositTokens)),
+		DefaultMinDepositPercentage,
 	)
 }
 
@@ -46,7 +57,7 @@ func (dp DepositParams) String() string {
 
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod && dp.MinExpeditedDeposit.IsEqual(dp2.MinExpeditedDeposit) && dp.MinDepositPercentage.Equal(dp2.MinDepositPercentage)
 }
 
 func validateDepositParams(i interface{}) error {
@@ -55,33 +66,48 @@ func validateDepositParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if !v.MinDeposit.IsValid() {
-		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
+	minDeposit := v.MinDeposit
+	if !minDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
 	}
 	if v.MaxDepositPeriod <= 0 {
 		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
+	}
+	minExpeditedDeposit := v.MinExpeditedDeposit
+	if !minExpeditedDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum expedited deposit: %s", minExpeditedDeposit)
+	}
+	if minExpeditedDeposit.IsAllLTE(minDeposit) {
+		return fmt.Errorf("minimum expedited deposit %s must be greater than expedited deposit %s", minExpeditedDeposit, minDeposit)
+	}
+	if v.MinDepositPercentage.IsNegative() {
+		return fmt.Errorf("minimum deposit percentage cannot be negative: %s", v.MinDepositPercentage)
+	}
+	if v.MinDepositPercentage.GT(sdk.OneDec()) {
+		return fmt.Errorf("minimum deposit percentage too large: %s", v)
 	}
 
 	return nil
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
+func NewTallyParams(quorum, threshold, expeditedThreshold, vetoThreshold sdk.Dec) TallyParams {
 	return TallyParams{
-		Quorum:        quorum,
-		Threshold:     threshold,
-		VetoThreshold: vetoThreshold,
+		Quorum:             quorum,
+		Threshold:          threshold,
+		ExpeditedThreshold: expeditedThreshold,
+		VetoThreshold:      vetoThreshold,
 	}
 }
 
 // DefaultTallyParams default parameters for tallying
 func DefaultTallyParams() TallyParams {
-	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
+	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultExpeditedThreshold, DefaultVetoThreshold)
 }
 
 // Equal checks equality of TallyParams
 func (tp TallyParams) Equal(other TallyParams) bool {
-	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
+	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.ExpeditedThreshold.Equal(other.ExpeditedThreshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
 }
 
 // String implements stringer insterface
@@ -106,7 +132,16 @@ func validateTallyParams(i interface{}) error {
 		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
 	}
 	if v.Threshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("vote threshold too large: %s", v)
+		return fmt.Errorf("vote threshold too large: %s", v.Threshold)
+	}
+	if !v.ExpeditedThreshold.IsPositive() {
+		return fmt.Errorf("expedited ote threshold must be positive: %s", v.ExpeditedThreshold)
+	}
+	if v.ExpeditedThreshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("expedited vote threshold too large: %s", v.ExpeditedThreshold)
+	}
+	if v.ExpeditedThreshold.LTE(v.Threshold) {
+		return fmt.Errorf("expedited vote threshold %s, must be greater than the regular threshold %s", v.ExpeditedThreshold, v.Threshold)
 	}
 	if !v.VetoThreshold.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
@@ -119,20 +154,22 @@ func validateTallyParams(i interface{}) error {
 }
 
 // NewVotingParams creates a new VotingParams object
-func NewVotingParams(votingPeriod time.Duration) VotingParams {
+func NewVotingParams(votingPeriod time.Duration, expeditedPeriod time.Duration) VotingParams {
 	return VotingParams{
-		VotingPeriod: votingPeriod,
+		VotingPeriod:          votingPeriod,
+		ExpeditedVotingPeriod: expeditedPeriod,
 	}
 }
 
 // DefaultVotingParams default parameters for voting
 func DefaultVotingParams() VotingParams {
-	return NewVotingParams(DefaultPeriod)
+	return NewVotingParams(DefaultPeriod, DefaultExpeditedPeriod)
 }
 
 // Equal checks equality of TallyParams
 func (vp VotingParams) Equal(other VotingParams) bool {
-	return vp.VotingPeriod == other.VotingPeriod
+	return vp.VotingPeriod == other.VotingPeriod &&
+		ProposalVotingPeriods(vp.ProposalVotingPeriods).Equal(ProposalVotingPeriods(other.ProposalVotingPeriods))
 }
 
 // String implements stringer interface
@@ -149,6 +186,23 @@ func validateVotingParams(i interface{}) error {
 
 	if v.VotingPeriod <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
+	}
+
+	if v.ExpeditedVotingPeriod <= 0 {
+		return fmt.Errorf("expedited voting period must be positive: %s", v.ExpeditedVotingPeriod)
+	}
+
+	if v.ExpeditedVotingPeriod >= v.VotingPeriod {
+		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", v.ExpeditedVotingPeriod, v.VotingPeriod)
+	}
+
+	for _, pvp := range v.ProposalVotingPeriods {
+		if pvp.ProposalType == "" {
+			return errors.New("empty proposal type for proposal voting period")
+		}
+		if pvp.VotingPeriod <= 0 {
+			return fmt.Errorf("voting period must be positive for proposal voting period: %s", pvp.VotingPeriod)
+		}
 	}
 
 	return nil
@@ -178,4 +232,38 @@ func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 // DefaultParams default governance params
 func DefaultParams() Params {
 	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
+}
+
+func (pvp ProposalVotingPeriod) String() string {
+	out, _ := yaml.Marshal(pvp)
+	return string(out)
+}
+
+// ProposalVotingPeriods defines a type alias for a slice of ProposalVotingPeriod
+// objects.
+type ProposalVotingPeriods []ProposalVotingPeriod
+
+func (pvps ProposalVotingPeriods) Equal(other ProposalVotingPeriods) bool {
+	sort.Slice(pvps, func(i, j int) bool {
+		return strings.Compare(pvps[i].ProposalType, pvps[j].ProposalType) < 0
+	})
+
+	sort.Slice(other, func(i, j int) bool {
+		return strings.Compare(other[i].ProposalType, other[j].ProposalType) < 0
+	})
+
+	if len(pvps) != len(other) {
+		return false
+	}
+
+	for i := 0; i < len(pvps); i++ {
+		a := pvps[i]
+		b := other[i]
+
+		if strings.Compare(a.ProposalType, b.ProposalType) != 0 || a.VotingPeriod != b.VotingPeriod {
+			return false
+		}
+	}
+
+	return true
 }

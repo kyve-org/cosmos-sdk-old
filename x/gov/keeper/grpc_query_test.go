@@ -3,6 +3,7 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -875,10 +876,18 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 		expRes *v1beta1.QueryParamsResponse
 	)
 
+	defaultDepositParams := v1beta1.DepositParams{
+		MinDeposit:           sdk.NewCoins(),
+		MaxDepositPeriod:     time.Second * 0,
+		MinExpeditedDeposit:  sdk.NewCoins(),
+		MinDepositPercentage: sdk.NewDec(0),
+	}
+
 	defaultTallyParams := v1beta1.TallyParams{
-		Quorum:        sdk.NewDec(0),
-		Threshold:     sdk.NewDec(0),
-		VetoThreshold: sdk.NewDec(0),
+		Quorum:             sdk.NewDec(0),
+		Threshold:          sdk.NewDec(0),
+		ExpeditedThreshold: sdk.NewDec(0),
+		VetoThreshold:      sdk.NewDec(0),
 	}
 
 	testCases := []struct {
@@ -911,8 +920,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamVoting}
 				votingParams := v1beta1.DefaultVotingParams()
 				expRes = &v1beta1.QueryParamsResponse{
-					VotingParams: votingParams,
-					TallyParams:  defaultTallyParams,
+					DepositParams: defaultDepositParams,
+					TallyParams:   defaultTallyParams,
+					VotingParams:  votingParams,
 				}
 			},
 			true,
@@ -923,7 +933,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamTallying}
 				tallyParams := v1beta1.DefaultTallyParams()
 				expRes = &v1beta1.QueryParamsResponse{
-					TallyParams: tallyParams,
+					DepositParams: defaultDepositParams,
+					TallyParams:   tallyParams,
 				}
 			},
 			true,
@@ -946,8 +957,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
-				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
+				suite.Require().True(expRes.GetDepositParams().Equal(params.GetDepositParams()))
+				suite.Require().True(expRes.GetVotingParams().Equal(params.GetVotingParams()))
 				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
 			} else {
 				suite.Require().Error(err)

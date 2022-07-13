@@ -25,13 +25,13 @@ func TestMigrateStore(t *testing.T) {
 	propTime := time.Unix(1e9, 0)
 
 	// Create 2 proposals
-	prop1, err := v1beta1.NewProposal(v1beta1.NewTextProposal("my title 1", "my desc 1"), 1, propTime, propTime)
+	prop1, err := v1beta1.NewProposal(v1beta1.NewTextProposal("my title 1", "my desc 1"), 1, propTime, propTime, false)
 	require.NoError(t, err)
 	prop1Bz, err := cdc.Marshal(&prop1)
 	require.NoError(t, err)
 	prop2, err := v1beta1.NewProposal(upgradetypes.NewSoftwareUpgradeProposal("my title 2", "my desc 2", upgradetypes.Plan{
 		Name: "my plan 2",
-	}), 2, propTime, propTime)
+	}), 2, propTime, propTime, false)
 	require.NoError(t, err)
 	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)

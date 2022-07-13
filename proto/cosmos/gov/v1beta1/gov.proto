@@ -82,6 +82,7 @@ message Proposal {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   google.protobuf.Timestamp voting_start_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   google.protobuf.Timestamp voting_end_time   = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  bool                      is_expedited      = 10;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.
@@ -165,13 +166,37 @@ message DepositParams {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "max_deposit_period,omitempty"
   ];
+
+  //  Minimum expedited deposit for a proposal to enter voting period.
+  repeated cosmos.base.v1beta1.Coin min_expedited_deposit = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.jsontag)      = "min_expedited_deposit,omitempty"
+  ];
+
+  //  TODO.
+  bytes min_deposit_percentage = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "min_deposit_percentage,omitempty"
+  ];
 }
 
 // VotingParams defines the params for voting on governance proposals.
 message VotingParams {
-  //  Length of the voting period.
+  // voting_period defines the length of the voting period.
   google.protobuf.Duration voting_period = 1
       [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.jsontag) = "voting_period,omitempty"];
+
+  // proposal_voting_periods defines custom voting periods for proposal types.
+  repeated ProposalVotingPeriod proposal_voting_periods = 2 [(gogoproto.nullable) = false];
+
+  // expedited_voting_period defines the length of the expedited voting period.
+  google.protobuf.Duration expedited_voting_period = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "expedited_voting_period,omitempty"
+  ];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.
@@ -198,4 +223,19 @@ message TallyParams {
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "veto_threshold,omitempty"
   ];
+
+  //  Minimum proportion of Yes votes for an expedited proposal to pass. Default value: 0.67.
+  bytes expedited_threshold = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "expedited_threshold,omitempty"
+  ];
+}
+
+// ProposalVotingPeriod defines custom voting periods for a unique governance
+// proposal type.
+message ProposalVotingPeriod {
+  string                   proposal_type = 1; // e.g. "cosmos.params.v1beta1.ParameterChangeProposal"
+  google.protobuf.Duration voting_period = 2
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.jsontag) = "voting_period,omitempty"];
 }

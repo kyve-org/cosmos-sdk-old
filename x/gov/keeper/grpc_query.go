@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -376,11 +375,16 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 
 	if resp.DepositParams != nil {
 		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
-		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
+		minExpeditedDeposit := sdk.NewCoins(resp.DepositParams.MinExpeditedDeposit...)
+		minDepositPercentage, err := sdk.NewDecFromStr(resp.DepositParams.MinDepositPercentage)
+		if err != nil {
+			return nil, err
+		}
+		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod, minExpeditedDeposit, minDepositPercentage)
 	}
 
 	if resp.VotingParams != nil {
-		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
+		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod, *resp.VotingParams.ExpeditedVotingPeriod)
 	}
 
 	if resp.TallyParams != nil {
@@ -392,12 +396,16 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 		if err != nil {
 			return nil, err
 		}
+		expeditedThreshold, err := sdk.NewDecFromStr(resp.TallyParams.ExpeditedThreshold)
+		if err != nil {
+			return nil, err
+		}
 		vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
 		if err != nil {
 			return nil, err
 		}
 
-		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
+		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, expeditedThreshold, vetoThreshold)
 	}
 
 	return response, nil
