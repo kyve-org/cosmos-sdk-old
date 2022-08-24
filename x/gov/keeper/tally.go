@@ -67,17 +67,15 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 		})
 
 		//
-		if keeper.rk != nil {
-			keeper.rk.IterateProtocolBonding(ctx, voter, func(poolId uint64, amount sdk.Int) (stop bool) {
-				for _, option := range vote.Options {
-					subPower := amount.ToDec().Mul(option.Weight)
-					results[option.Option] = results[option.Option].Add(subPower)
-				}
+		if keeper.dk != nil {
+			amount := keeper.dk.GetBondingOfAddress(ctx, voter)
 
-				totalVotingPower = totalVotingPower.Add(amount.ToDec())
+			for _, option := range vote.Options {
+				subPower := amount.ToDec().Mul(option.Weight)
+				results[option.Option] = results[option.Option].Add(subPower)
+			}
 
-				return false
-			})
+			totalVotingPower = totalVotingPower.Add(amount.ToDec())
 		}
 
 		keeper.deleteVote(ctx, vote.ProposalId, voter)
@@ -104,8 +102,8 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 	tallyResults = types.NewTallyResultFromMap(results)
 
 	totalProtocolBonded := sdk.ZeroInt()
-	if keeper.rk != nil {
-		totalProtocolBonded = keeper.rk.TotalProtocolBonding(ctx)
+	if keeper.dk != nil {
+		totalProtocolBonded = keeper.dk.TotalProtocolBonding(ctx)
 	}
 	totalBonded := keeper.sk.TotalBondedTokens(ctx).Add(totalProtocolBonded)
 
