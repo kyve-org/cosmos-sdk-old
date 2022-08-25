@@ -26,9 +26,9 @@ type StakingKeeper interface {
 	)
 }
 
-// RegistryKeeper expected registry keeper (Protocol Validator and Delegator sets) (noalias)
-type RegistryKeeper interface {
-	IterateProtocolBonding(ctx sdk.Context, address sdk.AccAddress, fn func(poolId uint64, amount sdk.Int) (stop bool))
+// DelegationKeeper expected delegation keeper (Protocol Validator and Delegator sets) (noalias)
+type DelegationKeeper interface {
+	GetBondingOfAddress(ctx sdk.Context, address sdk.AccAddress) sdk.Int
 	TotalProtocolBonding(ctx sdk.Context) sdk.Int
 }
 

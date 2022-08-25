@@ -24,7 +24,7 @@ type Keeper struct {
 	sk types.StakingKeeper
 
 	// The reference to the ProtocolDelegationSet and ProtocolValidatorSet to get information about protocol validators and delegators
-	rk types.RegistryKeeper
+	dk types.DelegationKeeper
 
 	// GovHooks
 	hooks types.GovHooks
@@ -48,9 +48,8 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace types.ParamSubspace,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rk types.RegistryKeeper, rtr types.Router,
+	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, dk types.DelegationKeeper, rtr types.Router,
 ) Keeper {
-
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -67,7 +66,7 @@ func NewKeeper(
 		authKeeper: authKeeper,
 		bankKeeper: bankKeeper,
 		sk:         sk,
-		rk:         rk,
+		dk:         dk,
 		cdc:        cdc,
 		router:     rtr,
 	}
